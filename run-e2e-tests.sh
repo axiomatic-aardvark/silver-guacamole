@@ -268,5 +268,19 @@ sleep 10
 # Run one-off test
 echo "Running test: poi_divergence_local"
 num_total_tests=$((num_total_tests + 1))
-if timeout 2m cargo run --bin integration-tests -- --check=poi_divergence_local 2>&1 | tee logs/poi_divergence
+if timeout 2m cargo run --bin integration-tests -- --check=poi_divergence_local 2>&1 | tee logs/poi_divergence_local_logs.log; then
+    echo "poi_divergence_local - ✓"
+    num_success_tests=$((num_success_tests + 1))
+    rm logs/poi_divergence_local_logs.log
+elif [ $? -eq 124 ]; then
+    echo "poi_divergence_local - timeout"
+    num_timeout_tests=$((num_timeout_tests + 1))
+    names_of_failed_tests+=("poi_divergence_local")
+else
+    echo "poi_divergence_local - ✗"
+    num_fail_tests=$((num_fail_tests + 1))
+    names_of_failed_tests+=("poi_divergence_local")
+fi
 
+# Stop containers and print summary report
+stop_containers
