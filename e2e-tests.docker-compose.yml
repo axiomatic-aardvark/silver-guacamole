@@ -1,25 +1,16 @@
 version: "3"
 services:
   basic-instance:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    entrypoint: [ "/usr/local/bin/integration-tests", "--instance=basic" ]
+    build: .
+    entrypoint: ["/usr/local/bin/integration-tests"]
+    command: ["--instance=basic"]
+
   divergent-instance:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    entrypoint:
-      [
-        "/usr/local/bin/integration-tests",
-        "--instance=divergent"
-      ]
+    build: .
+    entrypoint: ["/usr/local/bin/integration-tests"]
+    command: ["--instance=divergent"]
+
   invalid-payload-instance:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    entrypoint:
-      [
-        "/usr/local/bin/integration-tests",
-        "--instance=invalid_payload"
-      ]
+    build: .
+    entrypoint: ["/usr/local/bin/integration-tests"]
+    command: ["--instance=invalid_payload"]
