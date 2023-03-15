@@ -99,7 +99,7 @@ dump_failed_tests_logs() {
 
 # Start containers
 echo "Starting containers..."
-docker-compose -f $compose_file up --scale basic-instance=$num_basic_containers basic-instance -d
+docker-compose -f $compose_file up -d basic-instance --scale basic-instance=$num_basic_containers
 
 # Wait for containers to start
 echo "Waiting for containers to start..."
