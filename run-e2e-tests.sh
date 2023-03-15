@@ -12,7 +12,7 @@ export PRIVATE_KEY=$PRIVATE_KEY
 mkdir -p logs
 
 # Define variables
-compose_file="e2e-tests.docker-compose --env-file /dev/null.yml"
+compose_file="e2e-tests.docker-compose.yml"
 num_basic_containers=5
 simple_tests=(
     "poi_ok"
@@ -40,7 +40,7 @@ names_of_failed_tests=()
 # Function to stop containers and print summary report
 stop_containers() {
     echo "Stopping containers..."
-    docker-compose --env-file /dev/null -f $compose_file down
+    docker-compose -f $compose_file down
     echo "Summary Report:"
     echo "
 -------------------------------------
@@ -103,7 +103,7 @@ docker-compose --env-file /dev/null -f $compose_file up basic-instance --scale b
 
 # Wait for containers to start
 echo "Waiting for containers to start..."
-until [ $(docker-compose --env-file /dev/null -f $compose_file ps -q basic-instance | wc -l) -eq $num_basic_containers ]; do
+until [ $(docker-compose -f $compose_file ps -q basic-instance | wc -l) -eq $num_basic_containers ]; do
     sleep 1
 done
 
@@ -148,7 +148,7 @@ fi
 
 # Stop invalid-payload-instance container
 echo "Stopping invalid-payload-instance container..."
-docker-compose --env-file /dev/null -f $compose_file stop invalid-payload-instance
+docker-compose -f $compose_file stop invalid-payload-instance
 
 # Scale up divergent instances
 echo "Scaling containers..."
