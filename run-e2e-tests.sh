@@ -99,7 +99,7 @@ dump_failed_tests_logs() {
 
 # Start containers
 echo "Starting containers..."
-docker-compose -f $compose_file up -d basic-instance --scale basic-instance=$num_basic_containers
+docker-compose -f $compose_file up -d --scale basic-instance=$num_basic_containers
 
 # Wait for containers to start
 echo "Waiting for containers to start..."
@@ -152,7 +152,89 @@ docker-compose -f $compose_file stop invalid-payload-instance
 
 # Scale up divergent instances
 echo "Scaling containers..."
-docker-compose -f $compose_file up -d divergent-instance
+docker-compose -f $compose_file up -d --scale divergent-instance=5
+
+# Wait 10 seconds for containers to settle
+echo "Waiting for containers to settle..."
+sleep 10
+
+# Run one-off test
+echo "Running test: poi_divergence_remote"
+num_total_tests=$((num_total_tests + 1))
+if timeout 2m cargo run --bin integration-tests -- --check=poi_divergence_remote 2>&1 | tee logs/poi_divergence_remote_logs.log; then
+    echo "poi_divergence_remote - ✓"
+    num_success_tests=$((num_success_tests + 1))
+    rm logs/poi_divergence_remote_logs.log
+elif [ $? -eq 124 ]; then
+    echo "poi_divergence_remote - timeout"
+    num_timeout_tests=$((num_timeout_tests + 1))
+    names_of_failed_tests+=("poi_divergence_remote")
+else
+    echo "poi_divergence_remote - ✗"
+    num_fail_tests=$((num_fail_tests + 1))
+    names_of_failed_tests+=("poi_divergence_remote")
+fi
+
+# Scale down basic instances to 1 and scale up divergent instances to 5
+echo "Scaling containers..."
+docker-compose -f $compose_file up -d --scale basic-instance=1 --scale divergent-instance=5
+
+# Wait 10 seconds for containers to settle
+echo "Waiting for containers to settle..."
+sleep 10
+
+# Wait for containers to start
+echo "Waiting for containers to start..."
+until [ $(docker-compose -f $compose_file ps -q basic-instance | wc -l) -eq $num_basic_containers ]; do
+    sleep 1
+done
+
+# Wait 10 seconds for containers to settle
+echo "Waiting for containers to settle..."
+sleep 10
+
+# Loop through simple tests
+for test_name in "${simple_tests[@]}"; do
+    run_test_with_timeout $test_name 2m
+done
+
+# Loop through validation tests
+for test_name in "${validation_tests[@]}"; do
+    run_test_with_timeout $test_name 1m
+done
+
+# Start invalid-payload-instance container
+echo "Starting invalid-payload-instance container..."
+docker-compose -f $compose_file up -d invalid-payload-instance
+
+# Wait for container to start
+echo "Waiting for container to start..."
+sleep 10
+
+# Run one-off test
+echo "Running test: invalid_payload"
+num_total_tests=$((num_total_tests + 1))
+if timeout 2m cargo run --bin integration-tests -- --check=invalid_payload 2>&1 | tee logs/invalid_payload_logs.log; then
+    echo "invalid_payload - ✓"
+    num_success_tests=$((num_success_tests + 1))
+    rm logs/invalid_payload_logs.log
+elif [ $? -eq 124 ]; then
+    echo "invalid_payload - timeout"
+    num_timeout_tests=$((num_timeout_tests + 1))
+    names_of_failed_tests+=("invalid_payload")
+else
+    echo "invalid_payload - ✗"
+    num_fail_tests=$((num_fail_tests + 1))
+    names_of_failed_tests+=("invalid_payload")
+fi
+
+# Stop invalid-payload-instance container
+echo "Stopping invalid-payload-instance container..."
+docker-compose -f $compose_file stop invalid-payload-instance
+
+# Scale up divergent instances
+echo "Scaling containers..."
+docker-compose -f $compose_file up -d --scale divergent-instance=5
 
 # Wait 10 seconds for containers to settle
 echo "Waiting for containers to settle..."
@@ -186,19 +268,5 @@ sleep 10
 # Run one-off test
 echo "Running test: poi_divergence_local"
 num_total_tests=$((num_total_tests + 1))
-if timeout 2m cargo run --bin integration-tests -- --check=poi_divergence_local 2>&1 | tee logs/poi_divergence_local_logs.log; then
-    echo "poi_divergence_local - ✓"
-    num_success_tests=$((num_success_tests + 1))
-    rm logs/poi_divergence_local_logs.log
-elif [ $? -eq 124 ]; then
-    echo "poi_divergence_local - timeout"
-    num_timeout_tests=$((num_timeout_tests + 1))
-    names_of_failed_tests+=("poi_divergence_local")
-else
-    echo "poi_divergence_local - ✗"
-    num_fail_tests=$((num_fail_tests + 1))
-    names_of_failed_tests+=("poi_divergence_local")
-fi
+if timeout 2m cargo run --bin integration-tests -- --check=poi_divergence_local 2>&1 | tee logs/poi_divergence
 
-# Stop all containers and print summary report
-stop_containers
