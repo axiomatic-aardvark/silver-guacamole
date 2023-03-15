@@ -99,7 +99,7 @@ dump_failed_tests_logs() {
 
 # Start containers
 echo "Starting containers..."
-docker-compose --env-file /dev/null -f $compose_file up basic-instance --scale basic-instance=$num_basic_containers -d
+docker-compose --no-env-file -f $compose_file up basic-instance --scale basic-instance=$num_basic_containers -d
 
 # Wait for containers to start
 echo "Waiting for containers to start..."
@@ -123,7 +123,7 @@ done
 
 # Start invalid-payload-instance container
 echo "Starting invalid-payload-instance container..."
-docker-compose --env-file /dev/null -f $compose_file up invalid-payload-instance -d
+docker-compose --no-env-file -f $compose_file up invalid-payload-instance -d
 
 # Wait for container to start
 echo "Waiting for container to start..."
@@ -152,7 +152,7 @@ docker-compose -f $compose_file stop invalid-payload-instance
 
 # Scale up divergent instances
 echo "Scaling containers..."
-docker-compose --env-file /dev/null -f $compose_file up divergent-instance -d
+docker-compose --no-env-file -f $compose_file up divergent-instance -d
 
 # Wait 10 seconds for containers to settle
 echo "Waiting for containers to settle..."
@@ -177,7 +177,7 @@ fi
 
 # Scale down basic instances to 1 and scale up divergent instances to 5
 echo "Scaling containers..."
-docker-compose --env-file /dev/null -f $compose_file up -d --scale basic-instance=1 --scale divergent-instance=5
+docker-compose --no-env-file -f $compose_file up -d --scale basic-instance=1 --scale divergent-instance=5
 
 # Wait 10 seconds for containers to settle
 echo "Waiting for containers to settle..."
