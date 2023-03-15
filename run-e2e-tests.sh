@@ -1,10 +1,18 @@
 #!/bin/bash
 
+# Export environment variables
+export GRAPH_NODE_STATUS_ENDPOINT=$GRAPH_NODE_STATUS_ENDPOINT
+export REGISTRY_SUBGRAPH=$REGISTRY_SUBGRAPH
+export NETWORK_SUBGRAPH=$NETWORK_SUBGRAPH
+export GRAPHCAST_NETWORK=$GRAPHCAST_NETWORK
+export RUST_LOG=$RUST_LOG
+export PRIVATE_KEY=$PRIVATE_KEY
+
 # Create logs directory if it doesn't exist
 mkdir -p logs
 
 # Define variables
-compose_file="e2e-tests.docker-compose.yml"
+compose_file="e2e-tests.docker-compose --env-file /dev/null.yml"
 num_basic_containers=5
 simple_tests=(
     "poi_ok"
@@ -32,7 +40,7 @@ names_of_failed_tests=()
 # Function to stop containers and print summary report
 stop_containers() {
     echo "Stopping containers..."
-    docker-compose -f $compose_file down
+    docker-compose --env-file /dev/null -f $compose_file down
     echo "Summary Report:"
     echo "
 -------------------------------------
@@ -91,11 +99,11 @@ dump_failed_tests_logs() {
 
 # Start containers
 echo "Starting containers..."
-docker-compose -f $compose_file up basic-instance --scale basic-instance=$num_basic_containers -d
+docker-compose --env-file /dev/null -f $compose_file up basic-instance --scale basic-instance=$num_basic_containers -d
 
 # Wait for containers to start
 echo "Waiting for containers to start..."
-until [ $(docker-compose -f $compose_file ps -q basic-instance | wc -l) -eq $num_basic_containers ]; do
+until [ $(docker-compose --env-file /dev/null -f $compose_file ps -q basic-instance | wc -l) -eq $num_basic_containers ]; do
     sleep 1
 done
 
@@ -115,7 +123,7 @@ done
 
 # Start invalid-payload-instance container
 echo "Starting invalid-payload-instance container..."
-docker-compose -f $compose_file up invalid-payload-instance -d
+docker-compose --env-file /dev/null -f $compose_file up invalid-payload-instance -d
 
 # Wait for container to start
 echo "Waiting for container to start..."
@@ -140,11 +148,11 @@ fi
 
 # Stop invalid-payload-instance container
 echo "Stopping invalid-payload-instance container..."
-docker-compose -f $compose_file stop invalid-payload-instance
+docker-compose --env-file /dev/null -f $compose_file stop invalid-payload-instance
 
 # Scale up divergent instances
 echo "Scaling containers..."
-docker-compose -f $compose_file up divergent-instance -d
+docker-compose --env-file /dev/null -f $compose_file up divergent-instance -d
 
 # Wait 10 seconds for containers to settle
 echo "Waiting for containers to settle..."
@@ -169,7 +177,7 @@ fi
 
 # Scale down basic instances to 1 and scale up divergent instances to 5
 echo "Scaling containers..."
-docker-compose -f $compose_file up -d --scale basic-instance=1 --scale divergent-instance=5
+docker-compose --env-file /dev/null -f $compose_file up -d --scale basic-instance=1 --scale divergent-instance=5
 
 # Wait 10 seconds for containers to settle
 echo "Waiting for containers to settle..."
