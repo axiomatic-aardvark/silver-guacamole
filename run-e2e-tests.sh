@@ -90,16 +90,16 @@ dump_failed_tests_logs() {
     echo "Dumping failed tests logs to logs/failed_tests_logs.log"
     rm -f "logs/failed_tests_logs.log"
     for test_name in "${names_of_failed_tests[@]}"; do
-        echo "===== $test_name =====" >>logs/failed_tests_logs.log
-        cat "logs/${test_name}_logs.log" >>logs/failed_tests_logs.log
-        echo -e "\n\n" >>logs/failed_tests_logs.log
+        echo "===== $test_name =====" >> logs/failed_tests_logs.log
+        cat "logs/${test_name}_logs.log" >> logs/failed_tests_logs.log
+        echo -e "\n\n" >> logs/failed_tests_logs.log
         rm "logs/${test_name}_logs.log"
     done
 }
 
 # Start containers
 echo "Starting containers..."
-docker-compose -f $compose_file up basic-instance --scale basic-instance=$num_basic_containers -d
+docker-compose -f $compose_file up --scale basic-instance=$num_basic_containers basic-instance -d
 
 # Wait for containers to start
 echo "Waiting for containers to start..."
@@ -123,7 +123,7 @@ done
 
 # Start invalid-payload-instance container
 echo "Starting invalid-payload-instance container..."
-docker-compose -f $compose_file up invalid-payload-instance -d
+docker-compose -f $compose_file up -d invalid-payload-instance
 
 # Wait for container to start
 echo "Waiting for container to start..."
@@ -152,7 +152,7 @@ docker-compose -f $compose_file stop invalid-payload-instance
 
 # Scale up divergent instances
 echo "Scaling containers..."
-docker-compose -f $compose_file up divergent-instance -d
+docker-compose -f $compose_file up -d divergent-instance
 
 # Wait 10 seconds for containers to settle
 echo "Waiting for containers to settle..."
@@ -200,5 +200,5 @@ else
     names_of_failed_tests+=("poi_divergence_local")
 fi
 
-# Stop all containers and print the summary report
+# Stop all containers and print summary report
 stop_containers
